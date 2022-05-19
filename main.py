@@ -9,18 +9,13 @@ class vkuser:
     def __init__(self, _id: str):
         self.id = _id
 
-    def read_token(self):
-        with open('vk_tok.txt', 'r') as file:
-            token = file.read().strip()
-        return token
-
     def get_photo(self):
         url = 'https://api.vk.com/method/photos.get'
         params = {
             'owner_id': self.id,
             'album_id': 'profile',
             'extended': '1',
-            'access_token': self.read_token(),
+            'access_token': read_token()[0].strip(),
             'v': '5.131'
         }
         res = requests.get(url, params=params)
@@ -62,10 +57,32 @@ class vkuser:
             top_dict.update(photo[1])
         return top_dict
 
+def read_token():
+    with open('input.txt', 'r') as file:
+        token = file.readlines()
+        return token
+
+def write_json(input):
+    with open('data.json', 'w', encoding='utf-8') as file:
+        file.write(input)
+
+def interface():
+    check = input('ПРЕДУПРЕЖДЕНИЕ! токены и id вносятся в файл "input.txt": '
+                  '\nПервая строка - токен вконтакте \nВторая строка - токен яндекс'
+                  '\nТретья строка - id пользователя вконтакте'
+                  '\n\nТокены и id внесены в "input.txt" ? (y/n) ')
+    if check == 'y':
+        count = int(input('Введите количество обрабатываемых фотографий профиля: '))
+        ya_token = read_token()[1].strip()
+        vk_id = read_token()[2].strip()
+        VK_USER_1 = vkuser(vk_id)
+        vk_uploader = YaUploader(ya_token)
+        data = vk_uploader.vk_upload(VK_USER_1.top_photos(count), vk_id)
+        write_json(data)
+        print('Отчет по загруженным файлам записан в файл "data.json"')
+    else:
+        return
+
 
 if __name__ == '__main__':
-    vk_id = ''
-    VK_USER_1 = vkuser(vk_id)
-    ya_token = ''
-    vk_uploader = YaUploader(ya_token)
-    print(vk_uploader.vk_upload(VK_USER_1.top_photos(5), vk_id))
+    interface()
